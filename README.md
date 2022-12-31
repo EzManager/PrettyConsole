@@ -14,9 +14,9 @@ You should install integrated `Ez` package by pip.
 ```
 pip install ezmanager
 ```
-Now you can import `Eztest`
+Now you can import `pretty`
 ```python
-from ez.eztest import EzTest
+from ez import pretty
 ```
 
 ## How to use
