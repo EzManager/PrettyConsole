@@ -1,4 +1,7 @@
 import builtins
+import re
+#TODO 싹 다 16진수화....
+
 DEFAULT = ()
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -15,6 +18,16 @@ PINK = (255, 90, 255)
 BROWN = (120, 50, 0)
 
 OPEN = '\x1b['
+
+# BOLD = {True: 1, False: 22}
+# RGB_FORE = {True: '38;2;', False: 22}
+# RGB_BACK = {True: '48;2;', False: 22}
+# ITALIC = {True: 3, False: 23}
+# UNDERSCORE = {True: 4, False: 24}
+# BLINKING = {True: 5, False: 25}
+# REVERSE = {True: 7, False: 27}
+# INVISIBLE = {True: 8, False: 28}
+# STRIKE = {True: 9, False: 29}
 
 BOLD = 1
 RGB_FORE = '38;2;'
@@ -71,31 +84,72 @@ def print(msg='', color=DEFAULT, *opts, back=DEFAULT, end='\n'):
 
     e.g.) pretty.print("PRETTY!", pretty.PINK, pretty.ITALIC, 1, back=(255, 255, 230))
     """
+    if type(msg) is not str:
+        msg = str(msg)
     builtins.print(combine_options(color, back, *opts) + msg + END, end=end)
 
 
 
-def interpret(string):
+def interpret(string, strict_check=False, end=END):
     """
     Interpret the message by similar method as MarkDown.
+    Notice! The syntax will be checked loosely. So, only one asterisk can add ITALIC option.
+    Strict mode will be implemented later.
 
-    bold : **msg**
+    bold : ~msg~
 
-    color : |COLOR_NAMEmsg
+    fore-color : [open] #0x0x0xmsg | [close] msg#
 
-    italic : *msg*
+    italic : * msg *
 
     underscore : _msg_
 
-    blinking : ;msg;
+    blinking : %msg%
 
     reverse : ^msg^
 
-    invisible : `msg`
+    invisible : ` msg `
 
     strike : -msg-
 
+    e.g.) I'm _FORESTHOUSE_ and I like #00FF00~^*Forest*^~#.
     :param string: a string using above syntax
+    :param strict_check: check syntax carefully, but causes exception when the syntax error occur
+    :param end: same as print, and basically add reset character at the end of interpreted string
     :return: modified string
     """
-    return "Unimplemented"
+    match = {'~': [R_BOLD, BOLD],
+             '#': [R_RGB, R_RGB],  # Closing only
+             '*': [R_ITALIC, ITALIC],
+             '_': [R_UNDERSCORE, UNDERSCORE],
+             '%': [R_BLINKING, BLINKING],
+             '^': [R_REVERSE, REVERSE],
+             '`': [R_INVISIBLE, INVISIBLE],
+             '-': [R_STRIKE, STRIKE]}
+    state = {'~': False,
+             '#': False,  # Ignorable
+             '*': False,
+             '_': False,
+             '%': False,
+             '^': False,
+             '`': False,
+             '-': False}
+    color_syntax = re.compile(r'#[0-9a-fA-F]{6}')  # Should be preceded against others' syntax checking
+    syntax = re.compile(r'[~#*_%^`-]+')  # 모든 태그들로 스플릿 하되, 태그들이 연속적으로 있을 경우 묶어서 split, 이후 컴파일 진행
+    # TODO Final end tag
+
+    # fore-color
+    color_sections = set(color_syntax.findall(string))
+    for section in color_sections:
+        color = (int(section[1:3], 16), int(section[3:5], 16), int(section[5:7], 16))
+        string = string.replace(section, combine_options(color))
+
+    # others
+    for section in syntax.findall(string):
+        opts = []
+        for c in section:
+            state[c] = not state[c]
+            opts.append(match[c][state[c]])
+
+        string = string.replace(section, combine_options(DEFAULT, DEFAULT, *opts), 1)
+    return string + END
