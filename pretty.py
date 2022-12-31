@@ -19,16 +19,6 @@ BROWN = (120, 50, 0)
 
 OPEN = '\x1b['
 
-# BOLD = {True: 1, False: 22}
-# RGB_FORE = {True: '38;2;', False: 22}
-# RGB_BACK = {True: '48;2;', False: 22}
-# ITALIC = {True: 3, False: 23}
-# UNDERSCORE = {True: 4, False: 24}
-# BLINKING = {True: 5, False: 25}
-# REVERSE = {True: 7, False: 27}
-# INVISIBLE = {True: 8, False: 28}
-# STRIKE = {True: 9, False: 29}
-
 BOLD = 1
 RGB_FORE = '38;2;'
 RGB_BACK = '48;2;'
