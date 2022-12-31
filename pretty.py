@@ -98,7 +98,7 @@ def interpret(string, strict_check=False, end=END):
 
     bold : ~msg~
 
-    fore-color : [open] #0x0x0xmsg | [close] msg#
+    fore-color : #FFFFFFmsg# ( [open] #0x0x0xmsg | [close] msg# )
 
     italic : * msg *
 
@@ -112,11 +112,12 @@ def interpret(string, strict_check=False, end=END):
 
     strike : -msg-
 
-    e.g.) I'm _FORESTHOUSE_ and I like #00FF00~^*Forest*^~#.
     :param string: a string using above syntax
     :param strict_check: check syntax carefully, but causes exception when the syntax error occur
     :param end: same as print, and basically add reset character at the end of interpreted string
     :return: modified string
+
+    e.g.) I'm _FORESTHOUSE_ and I like #00FF00~^*Forest*^~#.
     """
     match = {'~': [R_BOLD, BOLD],
              '#': [R_RGB, R_RGB],  # Closing only
@@ -134,9 +135,8 @@ def interpret(string, strict_check=False, end=END):
              '^': False,
              '`': False,
              '-': False}
-    color_syntax = re.compile(r'#[0-9a-fA-F]{6}')  # Should be preceded against others' syntax checking
-    syntax = re.compile(r'[~#*_%^`-]+')  # 모든 태그들로 스플릿 하되, 태그들이 연속적으로 있을 경우 묶어서 split, 이후 컴파일 진행
-    # TODO Final end tag
+    color_syntax = re.compile(r'#[0-9a-fA-F]{6}')  # Should be preceded about others' syntax checking
+    syntax = re.compile(r'[~#*_%^`-]+')
 
     # fore-color
     color_sections = set(color_syntax.findall(string))
