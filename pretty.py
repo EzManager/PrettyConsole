@@ -1,6 +1,5 @@
 import builtins
 import re
-#TODO 싹 다 16진수화....
 
 DEFAULT = ()
 WHITE = (255, 255, 255)
@@ -44,8 +43,8 @@ END = '\x1b[0m'
 def combine_options(color=DEFAULT, back=DEFAULT, *opts):
     """
 
-    :param color: (R,G,B)
-    :param back: (R,G,B)
+    :param color: (R,G,B) | "RRGGBB"
+    :param back: (R,G,B) | "RRGGBB"
     :param opts: BOLD(1) | ITALIC(3) | UNDERSCORE(4) | BLINKING(5) | REVERSE(7) | INVISIBLE(8) | STRIKE(9)
     :return: a combined ANSI color code
     """
@@ -53,12 +52,16 @@ def combine_options(color=DEFAULT, back=DEFAULT, *opts):
     if opts:
         tag += OPEN
         tag += ';'.join(list(map(str, opts))) + 'm'
-    if color:
-        tag += OPEN
-        tag += RGB_FORE + ';'.join(list(map(str, color))) + 'm'
-    if back:
-        tag += OPEN
-        tag += RGB_BACK + ';'.join(list(map(str, back))) + 'm'
+    for param, com in ((color, RGB_FORE), (back, RGB_BACK)):
+        if param:
+            if type(param) == tuple:
+                pass
+            elif type(param) == str:
+                param = hex_to_256(param)
+            else:
+                raise TypeError("You need to write 2^8 RGB value as (R,G,B) tuple format, or HTML color as string type without #")
+            tag += OPEN
+            tag += com + ';'.join(list(map(str, param))) + 'm'
     return tag
 def print(msg='', color=DEFAULT, *opts, back=DEFAULT, end='\n'):
     """
@@ -131,7 +134,7 @@ def interpret(string, strict_check=False, end=END):
     # fore-color
     color_sections = set(color_syntax.findall(string))
     for section in color_sections:
-        color = (int(section[1:3], 16), int(section[3:5], 16), int(section[5:7], 16))
+        color = hex_to_256(section[1:])
         string = string.replace(section, combine_options(color))
 
     # others
@@ -143,3 +146,12 @@ def interpret(string, strict_check=False, end=END):
 
         string = string.replace(section, combine_options(DEFAULT, DEFAULT, *opts), 1)
     return string + END
+
+
+def hex_to_256(h: str):
+    """
+    Change HTML color format to 0-255 RGB tuple value
+    :param h: HTML color without # (e.g. 'FFFFFF' means WHITE)
+    :return: (R,G,B) value each is between 0 and 255 as tuple
+    """
+    return tuple((int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)))
